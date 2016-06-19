@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html ng-app="myApp">
+<head>
+	<title>Telegram Backup</title>
+	<meta charset="utf-8">
+	<meta name="google" content="notranslate">
+</head>
+
+<body>
+	<script type="text/javascript" src="js/config.js"></script>
+	
+	<script type="text/javascript" src="js/angular/angular.js"></script>
+	<script type="text/javascript" src="js/angular/angular-route.js"></script>
+	<script type="text/javascript" src="js/webogram/ng_utils.js"></script>
+	<script type="text/javascript" src="js/webogram/mtproto.js"></script>
+	<script type="text/javascript" src="js/webogram/mtproto_wrapper.js"></script>
+	<script type="text/javascript" src="js/webogram/configstorage.js"></script>
+	<script type="text/javascript" src="js/webogram/i18n.js"></script>
+	<script type="text/javascript" src="js/webogram/bin_utils.js"></script>
+	<script type="text/javascript" src="js/webogram/utils.js"></script>
+	<script type="text/javascript" src="js/webogram/tl_utils.js"></script>
+	<script type="text/javascript" src="js/webogram/polyfill.js"></script>
+	<script type="text/javascript" src="js/jquery/jquery-3.0.0.min.js"></script>
+	<script type="text/javascript" src="js/jsbn/jsbn_combined.js"></script>
+	<script type="text/javascript" src="js/rusha/rusha.js"></script>
+	<script type="text/javascript" src="js/cryptoJS/crypto.js"></script>	
+	<script type="text/javascript" src="js/zlib/gunzip.min.js"></script>
+	
+	<script type="text/javascript" src="js/app.js"></script>
+	<script type="text/javascript" src="js/functions.js"></script>
+	
+	<div ng-controller="MainController as main">
+		<a href="" ng-click="main.start()">Start</a><br />
+		<div ng-show="main.user">
+			Logged in as {{main.user.first_name}} {{main.user.last_name}}
+			<span ng-show="main.user.username">(@{{main.user.username}})</span>
+		</div>
+		<div ng-show="main.loading">Loading...</div>
+		<div>{{main.error}}</div>
+		<div ng-show="main.step == 1">
+			<h1>Step 1</h1>
+			<input type="text" ng-model="main.phone">
+			<a href="" ng-click="main.step_1_done()">Start</a>
+		</div>
+		<div ng-show="main.step == 2">
+			<h1>Step 2</h1>
+			We've sent you a code. Please enter it here:
+			<input type="text" ng-model="main.phone_code">
+			<a href="" ng-click="main.step_2_done()">OK</a>
+		</div>
+		<div ng-show="main.step == 3">
+			<h1>Step 3</h1>
+			You have set a password for your account. We need that as well.
+			<input type="password" ng-model="main.password">
+			<a href="" ng-click="main.step_3_done()">OK</a>
+		</div>
+	</div>
+</body>
+</html>
