@@ -4,6 +4,9 @@
 	<title>Telegram Backup</title>
 	<meta charset="utf-8">
 	<meta name="google" content="notranslate">
+	
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
 </head>
 
 <body>
@@ -19,23 +22,43 @@
 	<script type="text/javascript" src="js/webogram/bin_utils.js"></script>
 	<script type="text/javascript" src="js/webogram/utils.js"></script>
 	<script type="text/javascript" src="js/webogram/tl_utils.js"></script>
+	<script type="text/javascript" src="js/webogram/ng_utils.js"></script>
 	<script type="text/javascript" src="js/webogram/polyfill.js"></script>
 	<script type="text/javascript" src="js/jquery/jquery-3.0.0.min.js"></script>
 	<script type="text/javascript" src="js/jsbn/jsbn_combined.js"></script>
 	<script type="text/javascript" src="js/rusha/rusha.js"></script>
 	<script type="text/javascript" src="js/cryptoJS/crypto.js"></script>	
 	<script type="text/javascript" src="js/zlib/gunzip.min.js"></script>
+	<script type="text/javascript" src="js/zlib/gzip.min.js"></script>
+	<script type="text/javascript" src="js/zlib/zip.min.js"></script>
+	<script type="text/javascript" src="js/dexie/dexie.min.js"></script>
 	
 	<script type="text/javascript" src="js/app.js"></script>
 	<script type="text/javascript" src="js/functions.js"></script>
 	
 	<div ng-controller="MainController as main">
-		<a href="" ng-click="main.start()">Start</a><br />
+		<div>Status: {{main.status}}</div>
+		<textarea ng-model="main.log" style="width: 100%; height: 150px; font-size: 11px;"></textarea>
 		<div ng-show="main.user">
 			Logged in as {{main.user.first_name}} {{main.user.last_name}}
 			<span ng-show="main.user.username">(@{{main.user.username}})</span>
+			
+			<div>
+				<a href="" ng-click="main.start_download()">Start the download</a><br />
+				<input type="checkbox" ng-model="main.auto_download" /> Auto-download all missing media data
+			</div>
+			<div>
+				<a href="" ng-click="main.download_missing_media()">Download missing media</a>
+			</div>
 		</div>
 		<div ng-show="main.loading">Loading...</div>
+		<div ng-show="main.progress_name">
+			<div class="progress">
+				<div class="progress-bar progress-bar-striped active" role="progressbar" style="width: {{100*main.progress_current/main.progress_max}}%">
+					{{main.progress_current}} / {{main.progress_max}}
+				</div>
+			</div>
+		</div>
 		<div>{{main.error}}</div>
 		<div ng-show="main.step == 1">
 			<h1>Step 1</h1>
@@ -54,6 +77,9 @@
 			<input type="password" ng-model="main.password">
 			<a href="" ng-click="main.step_3_done()">OK</a>
 		</div>
+		
+		<a href="" ng-click="main.test()">Run code from test.js</a><br />
+		<a href="" ng-click="main.download_json()">Download cached data as JSON</a>
 	</div>
 </body>
 </html>
