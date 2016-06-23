@@ -159,7 +159,18 @@ angular.module('myApp.controllers', [])
 			main.set_status("Found " + array.length + " messages with media.");
 			main.set_status("Filtering stuff to download...");
 			var new_array = array.filter(function(elm) {
-				return elm.media.photo || elm.media.document;
+				if (
+					elm.media._=="messageMediaPhoto" || 
+					elm.media._=="messageMediaDocument"
+				) return true;
+				
+				if (
+					elm.media._=="messageMediaWebPage" ||
+					elm.media._=="messageMediaGeo"
+				) return false;
+				
+				main.set_status("Unsupported media: " + elm.media._);
+				return false;
 			});
 			main.set_status("Remaining messages with stuff to download: " + new_array.length);
 			main.set_status("Checking the cache for already downloaded files...");
@@ -219,14 +230,14 @@ angular.module('myApp.controllers', [])
 	}
 	
 	main.download_file_with_location = function(id, location, mimetype, filetype) {
-		if (location._==null) location._ = "inputFileLocation";
+		if (location._==null || location._=="fileLocation") location._ = "inputFileLocation";
 		MtpApiManager.invokeApi(
 			'upload.getFile',
 			{location: location, offset: 0, limit: 1024*1024},
 			{dcID: location.dc_id, fileDownload: true, createNetworker: true, noErrorBox: true}
 		).then(function(result) {
 			main.db.files.put(
-				{id: id, filetype: filetype, mimetype: mimetype, data: blobConstruct(result.bytes, mimetype)}
+				{id: id, filetype: filetype, mimetype: mimetype, data: btoa(main.ab2str(result.bytes))}
 			).finally(main.download_next_media);
 		}).catch(main.handle_errors);
 	}
@@ -237,12 +248,27 @@ angular.module('myApp.controllers', [])
 	}
 	
 	main.download_json = function() {
+		main.set_status("Creating ZIP file. This may take a few seconds...");
 		var zip = new Zlib.Zip();
 		main.db.messages.toArray().then(function(result) {
-			zip.addFile(JSON.stringify(result), { filename: main.str2ab("data.json") });
-			var data = zip.compress();
-			data = URL.createObjectURL(new Blob([data], {type: 'application/zip'}));
-			location.href = data;
+			zip.addFile(main.str2ab(JSON.stringify(result)), { filename: main.str2ab("data.json") });
+			
+			main.set_status("Adding media files...");
+			main.db.files.toArray().then(function(files) {
+				main.progress_name = "Media files to add";
+				main.progress_max = files.length;
+				main.progress_current = 0;
+				files.forEach(function(file) {
+					var filename = "" + file.id;
+					if (file.filetype && file.filetype!=null) filename += "." + file.filetype;
+					console.log(typeof file.data);
+					zip.addFile(main.str2ab(atob(file.data)), { filename: main.str2ab(filename) });
+					main.progress_current++;
+				});
+				var data = zip.compress();
+				data = URL.createObjectURL(new Blob([data], {type: 'application/zip'}));
+				location.href = data;
+			}).catch(main.handle_errors);
 		}).catch(main.handle_errors);
 	}
 			
@@ -271,6 +297,12 @@ angular.module('myApp.controllers', [])
 		var array = new (window.Uint8Array !== void 0 ? Uint8Array : Array)(str.length);
 		for (var i=0; i<str.length; i++) array[i] = str.charCodeAt(i) & 0xff;
 		return array;
+	}
+	
+	main.ab2str = function(array) {
+		var target = new Array(array.length);
+		for (var i=0; i<array.length; i++) target[i] = String.fromCharCode(array[i]);
+		return target.join('');
 	}
 });
 

@@ -54,7 +54,7 @@
 		<div ng-show="main.loading">Loading...</div>
 		<div ng-show="main.progress_name">
 			<div class="progress">
-				<div class="progress-bar progress-bar-striped active" role="progressbar" style="width: {{100*main.progress_current/main.progress_max}}%">
+				<div class="progress-bar progress-bar-striped active" role="progressbar" style="width: {{100*main.progress_current/main.progress_max}}%; text-shadow: 2px 2px 3px #000; white-space: nowrap;">
 					{{main.progress_current}} / {{main.progress_max}}
 				</div>
 			</div>
