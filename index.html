@@ -60,22 +60,26 @@
 			</div>
 		</div>
 		<div>{{main.error}}</div>
-		<div ng-show="main.step == 1">
-			<h1>Step 1</h1>
-			<input type="text" ng-model="main.phone">
-			<a href="" ng-click="main.step_1_done()">Start</a>
-		</div>
-		<div ng-show="main.step == 2">
-			<h1>Step 2</h1>
-			We've sent you a code. Please enter it here:
-			<input type="text" ng-model="main.phone_code">
-			<a href="" ng-click="main.step_2_done()">OK</a>
-		</div>
-		<div ng-show="main.step == 3">
-			<h1>Step 3</h1>
-			You have set a password for your account. We need that as well.
-			<input type="password" ng-model="main.password">
-			<a href="" ng-click="main.step_3_done()">OK</a>
+		<div ng-hide="main.user">
+			<div ng-show="main.step == 1">
+				<h1>Step 1</h1>
+				Please enter your phone number in international format. (For germany: "49" followed by your phone number without the leading zero. "491762223567", for example.)
+				<br />
+				<input type="text" ng-model="main.phone">
+				<a href="" ng-click="main.step_1_done()">Start</a>
+			</div>
+			<div ng-show="main.step == 2">
+				<h1>Step 2</h1>
+				Telegram should have sent you a code. Please enter it here:
+				<input type="text" ng-model="main.phone_code">
+				<a href="" ng-click="main.step_2_done()">OK</a>
+			</div>
+			<div ng-show="main.step == 3">
+				<h1>Step 3</h1>
+				You have set a password for your account. We need that as well.
+				<input type="password" ng-model="main.password">
+				<a href="" ng-click="main.step_3_done()">OK</a>
+			</div>
 		</div>
 		
 		<a href="" ng-click="main.test()">Run code from test.js</a><br />
