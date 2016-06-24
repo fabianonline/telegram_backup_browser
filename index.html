@@ -50,6 +50,12 @@
 			<div>
 				<a href="" ng-click="main.download_missing_media()">Download missing media</a>
 			</div>
+			<div>
+				<a href="" ng-click="main.test()">Run code from test.js</a>
+			</div>
+			<div>
+				<a href="" ng-click="main.download_json()">Download cached data as JSON</a>
+			<div>
 		</div>
 		<div ng-show="main.loading">Loading...</div>
 		<div ng-show="main.progress_name">
@@ -81,9 +87,6 @@
 				<a href="" ng-click="main.step_3_done()">OK</a>
 			</div>
 		</div>
-		
-		<a href="" ng-click="main.test()">Run code from test.js</a><br />
-		<a href="" ng-click="main.download_json()">Download cached data as JSON</a>
 	</div>
 </body>
 </html>

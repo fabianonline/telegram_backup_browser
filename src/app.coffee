@@ -309,8 +309,9 @@ window.angular.module('myApp.controllers', [])
 		.catch(@handle_errors)
 	
 	@handle_errors = (error) =>
+		@set_status("An error occured: " + JSON.stringify(error))
 		console.log(error)
-		debugger
+		error.handled = true
 	
 	@open_database = (user) =>
 		@db = new Dexie("telegram_backup_#{user.id}")
