@@ -14,21 +14,25 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
       return _this.log = ((new Date()).toString()) + " --- " + status + "\n" + _this.log;
     };
   })(this);
-  if (localStorage.getItem("dc") == null) {
-    localStorage.setItem("dc", 2);
-  }
-  this.set_status("Checking login state");
-  MtpApiManager.invokeApi('account.updateProfile', {}, {}).then((function(_this) {
-    return function(result) {
-      return _this.save_auth(result);
+  this.init = (function(_this) {
+    return function() {
+      _this.set_status("Finding nearest DC...");
+      return MtpApiManager.invokeApi('help.getNearestDc', {}, {}).then(function(result) {
+        var dc;
+        dc = result.nearest_dc;
+        _this.set_status("Nearest DC: " + dc);
+        localStorage.setItem('dc', dc);
+        _this.set_status("Checking login state");
+        return MtpApiManager.invokeApi('account.updateProfile', {}, {}).then(function(result) {
+          return _this.save_auth(result);
+        })["catch"](function(error) {
+          _this.set_status("You are not logged in.");
+          _this.user = null;
+          return error.handled = true;
+        });
+      })["catch"](_this.handle_errors);
     };
-  })(this))["catch"]((function(_this) {
-    return function(error) {
-      _this.set_status("You are not logged in.");
-      _this.user = null;
-      return error.handled = true;
-    };
-  })(this));
+  })(this);
   this.clear_status = (function(_this) {
     return function() {};
   })(this);
@@ -399,6 +403,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
       return location.href = "index.html";
     };
   })(this);
+  this.init();
   return null;
 });
 

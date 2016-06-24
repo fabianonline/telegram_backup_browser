@@ -12,23 +12,29 @@ window.angular.module('myApp.controllers', [])
 	@set_status = (status) =>
 		@log = "#{(new Date()).toString()} --- #{status}\n#{@log}"
 	
-	## Run at startup
-	
-	localStorage.setItem("dc", 2) unless localStorage.getItem("dc")?
-	
-	@set_status("Checking login state")
-	MtpApiManager.invokeApi(
-		'account.updateProfile',
-		{},
-		{}
-	).then (result) =>
-		@save_auth(result)
-	.catch (error) =>
-		@set_status("You are not logged in.")
-		@user = null
-		error.handled = true
-	
-	## End of run at startup
+	@init = =>
+		@set_status("Finding nearest DC...")
+		MtpApiManager.invokeApi(
+			'help.getNearestDc',
+			{},
+			{}
+		).then (result) =>
+			dc = result.nearest_dc
+			@set_status("Nearest DC: #{dc}")
+			localStorage.setItem('dc', dc)
+				
+			@set_status("Checking login state")
+			MtpApiManager.invokeApi(
+				'account.updateProfile',
+				{},
+				{}
+			).then (result) =>
+				@save_auth(result)
+			.catch (error) =>
+				@set_status("You are not logged in.")
+				@user = null
+				error.handled = true
+		.catch(@handle_errors)
 	
 	@clear_status = =>
 		# do nothing
@@ -363,6 +369,7 @@ window.angular.module('myApp.controllers', [])
 		localStorage.setItem("dc", 2)
 		location.href = "index.html"
 	
+	@init()
 	return null
 )
 
