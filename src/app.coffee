@@ -7,6 +7,7 @@ window.angular.module('myApp.controllers', [])
 	@log = ""
 	@status = ""
 	@db = null
+	@user = null
 	
 	@set_status = (status) =>
 		@log = "#{(new Date()).toString()} --- #{status}\n#{@log}"

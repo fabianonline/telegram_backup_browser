@@ -8,6 +8,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
   this.log = "";
   this.status = "";
   this.db = null;
+  this.user = null;
   this.set_status = (function(_this) {
     return function(status) {
       return _this.log = ((new Date()).toString()) + " --- " + status + "\n" + _this.log;
