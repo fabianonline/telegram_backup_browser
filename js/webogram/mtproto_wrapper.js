@@ -117,7 +117,7 @@ angular.module('izhukov.mtproto.wrapper', ['izhukov.utils', 'izhukov.mtproto'])
 
       var authKeyHex = result[0],
           serverSaltHex = result[1];
-      console.log('ass', dcID, authKeyHex, serverSaltHex);
+      //console.log('ass', dcID, authKeyHex, serverSaltHex);
       if (authKeyHex && authKeyHex.length == 512) {
         if (!serverSaltHex || serverSaltHex.length != 16) {
           serverSaltHex = 'AAAAAAAAAAAAAAAA';
