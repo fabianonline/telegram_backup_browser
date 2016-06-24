@@ -1,5 +1,5 @@
 window.angular.module('myApp.controllers', [])
-.controller('MainController', ($scope, $location, MtpApiManager, CryptoWorker, $timeout) ->
+.controller('MainController', ($scope, $location, MtpApiManager, CryptoWorker, $timeout, Storage) ->
 	window.mainController = @;
 	main = @
 	@loading = false
@@ -8,6 +8,7 @@ window.angular.module('myApp.controllers', [])
 	@status = ""
 	@db = null
 	@user = null
+	@storage = Storage
 	
 	@set_status = (status) =>
 		@log = "#{(new Date()).toString()} --- #{status}\n#{@log}"
@@ -355,6 +356,9 @@ window.angular.module('myApp.controllers', [])
 	
 	@logout = () =>
 		@user = null
+		
+		MtpApiManager.logOut()
+		
 		localStorage.removeItem("dc_auth_key")
 		localStorage.removeItem("dc1_auth_key")
 		localStorage.removeItem("dc2_auth_key")
