@@ -21,7 +21,12 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         var dc;
         dc = result.nearest_dc;
         _this.set_status("Nearest DC: " + dc);
-        localStorage.setItem('dc', dc);
+        return localStorage.setItem('dc', dc);
+      })["catch"](function(error) {
+        error.handled = true;
+        _this.set_status("Couldn't get nearest DC, but that isn't that bad. Using 2 by default.");
+        return localStorage.setItem('dc', 2);
+      })["finally"](function() {
         _this.set_status("Checking login state");
         return MtpApiManager.invokeApi('account.updateProfile', {}, {}).then(function(result) {
           return _this.save_auth(result);

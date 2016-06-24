@@ -22,7 +22,11 @@ window.angular.module('myApp.controllers', [])
 			dc = result.nearest_dc
 			@set_status("Nearest DC: #{dc}")
 			localStorage.setItem('dc', dc)
-				
+		.catch (error) =>
+			error.handled = true
+			@set_status("Couldn't get nearest DC, but that isn't that bad. Using 2 by default.")
+			localStorage.setItem('dc', 2)
+		.finally =>
 			@set_status("Checking login state")
 			MtpApiManager.invokeApi(
 				'account.updateProfile',
