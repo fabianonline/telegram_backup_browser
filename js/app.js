@@ -379,6 +379,26 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
     }
     return target.join("");
   };
+  this.logout = (function(_this) {
+    return function() {
+      _this.user = null;
+      localStorage.removeItem("dc_auth_key");
+      localStorage.removeItem("dc1_auth_key");
+      localStorage.removeItem("dc2_auth_key");
+      localStorage.removeItem("dc3_auth_key");
+      localStorage.removeItem("dc4_auth_key");
+      localStorage.removeItem("dc5_auth_key");
+      localStorage.removeItem("dc_server_salt");
+      localStorage.removeItem("dc1_server_salt");
+      localStorage.removeItem("dc2_server_salt");
+      localStorage.removeItem("dc3_server_salt");
+      localStorage.removeItem("dc4_server_salt");
+      localStorage.removeItem("dc5_server_salt");
+      localStorage.removeItem("user_auth");
+      localStorage.setItem("dc", 2);
+      return location.href = "index.html";
+    };
+  })(this);
   return null;
 });
 
