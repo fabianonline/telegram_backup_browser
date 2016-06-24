@@ -9,11 +9,9 @@ window.angular.module('myApp.controllers', [])
 	@db = null
 	@user = null
 	
-	@set_status = (status) =>
-		@log = "#{(new Date()).toString()} --- #{status}\n#{@log}"
+	## Run at startup
 	
-	@clear_status = =>
-		# do nothing
+	localStorage.setItem("dc", 2) unless localStorage.getItem("dc")?
 	
 	@set_status("Checking login state")
 	MtpApiManager.invokeApi(
@@ -27,6 +25,14 @@ window.angular.module('myApp.controllers', [])
 		@user = null
 		error.handled = true
 	
+	## End of run at startup
+	
+	@set_status = (status) =>
+		@log = "#{(new Date()).toString()} --- #{status}\n#{@log}"
+	
+	@clear_status = =>
+		# do nothing
+		
 	@save_auth = (user) =>
 		@set_status("You are logged in as #{user.first_name} #{user.last_name} #{"(@#{user.username})" if user.username}")
 		@user = user

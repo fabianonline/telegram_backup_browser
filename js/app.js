@@ -9,14 +9,9 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
   this.status = "";
   this.db = null;
   this.user = null;
-  this.set_status = (function(_this) {
-    return function(status) {
-      return _this.log = ((new Date()).toString()) + " --- " + status + "\n" + _this.log;
-    };
-  })(this);
-  this.clear_status = (function(_this) {
-    return function() {};
-  })(this);
+  if (localStorage.getItem("dc") == null) {
+    localStorage.setItem("dc", 2);
+  }
   this.set_status("Checking login state");
   MtpApiManager.invokeApi('account.updateProfile', {}, {}).then((function(_this) {
     return function(result) {
@@ -29,6 +24,14 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
       return error.handled = true;
     };
   })(this));
+  this.set_status = (function(_this) {
+    return function(status) {
+      return _this.log = ((new Date()).toString()) + " --- " + status + "\n" + _this.log;
+    };
+  })(this);
+  this.clear_status = (function(_this) {
+    return function() {};
+  })(this);
   this.save_auth = (function(_this) {
     return function(user) {
       _this.set_status("You are logged in as " + user.first_name + " " + user.last_name + " " + (user.username ? "(@" + user.username + ")" : void 0));
