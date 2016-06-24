@@ -16,15 +16,20 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
   this.clear_status = function() {};
   this.set_status("Checking login state");
   MtpApiManager.invokeApi('account.updateProfile', {}, {}).then(function(result) {
-    _this.clear_status();
-    _this.user = result;
-    _this.set_status("You are logged in as " + _this.user.first_name + " " + _this.user.last_name + ".");
-    return _this.open_database(result);
+    return _this.save_auth(result);
   })["catch"](function(error) {
     _this.set_status("You are not logged in.");
     _this.user = null;
     return error.handled = true;
   });
+  this.save_auth = function(user) {
+    _this.set_status("You are logged in as " + user.first_name + " " + user.last_name + " " + (user.username ? "(@" + user.username + ")" : void 0));
+    _this.user = user;
+    _this.open_database(user);
+    return MtpApiManager.setUserAuth(2, {
+      id: user.id
+    });
+  };
   this.step_1_done = function() {
     _this.loading = true;
     return MtpApiManager.invokeApi('auth.sendCode', {
@@ -54,8 +59,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
       phone_code_hash: _this.phone_code_hash,
       phone_code: _this.phone_code
     }, {}).then(function(result) {
-      _this.user = result.user;
-      return _this.open_database(_this.user);
+      return _this.save_auth(result.user);
     })["catch"](function(error) {
       if (error.code === 401 && error.type === 'SESSION_PASSWORD_NEEDED') {
         _this.loading = false;
@@ -73,8 +77,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         return MtpApiManager.invokeApi('auth.checkPassword', {
           password_hash: hash
         }, {}).then(function(result) {
-          _this.user = result.user;
-          return _this.open_database(result.user);
+          return _this.save_auth(result.user);
         })["catch"](_this.handle_errors)["finally"](function() {
           return _this.password = null;
         });
@@ -117,7 +120,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         _this.progress_name = "Messages loaded";
         _this.progress_max = _this.message_ids_to_load.length;
         _this.progress_current = 0;
-        return _this.download_messages;
+        return _this.download_messages();
       }
     });
   };
@@ -147,12 +150,12 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
           return _this.progress_name = "";
         }
       });
-    })["catch"](handle_errors);
+    })["catch"](_this.handle_errors);
   };
   this.download_missing_media = function() {
     _this.set_status("Fetching all messages with media from cache...");
     return _this.db.messages.filter(function(x) {
-      return x.media !== null;
+      return x.media != null;
     }).toArray().then(function(array) {
       var files, new_array;
       _this.set_status("Found " + array.length + " messages with media.");
@@ -161,7 +164,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         if (elm.media._ === "messageMediaPhoto" || elm.media._ === "messageMediaDocument") {
           return true;
         }
-        if (elm.media._ === "messageMediaWebPage" || elm.media._ === "messageMediaGeo") {
+        if (elm.media._ === "messageMediaWebPage" || elm.media._ === "messageMediaGeo" || elm.media._ === "messageMediaContact" || elm.media._ === "messageMediaVenue") {
           return false;
         }
         _this.set_status("Unsupported media type: " + elm.media._);
@@ -204,9 +207,9 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         _this.download_next_media();
       }
       return _this.download_file_with_location(message.id, biggest.location, "image/jpg", "jpg");
-    } else if (message.media.document) {
+    } else if (message.media.document != null) {
       if (message.media.document.size >= 1024 * 1024) {
-        _this.main.set_status("Document of message " + message.id + " is more than 1 MByte. Skipping.");
+        _this.set_status("Document of message " + message.id + " is more than 1 MByte. Skipping.");
         _this.download_next_media();
         return;
       }
@@ -220,7 +223,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
     var ext, file, loc;
     file = data_obj.file_name;
     ext = "";
-    if (file === null) {
+    if (file == null) {
       ext = "." + data_obj.mime_type.split('/')[1];
       if (ext === ".octet-stream") {
         ext = "";
@@ -235,7 +238,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
       dc_id: data_obj.dc_id,
       size: data_obj.size
     };
-    return _this.download_file_with_location(id, loc, data_obj.mimetype, ext.substr(1));
+    return _this.download_file_with_location(id, loc, data_obj.mime_type, ext.substr(1));
   };
   this.download_file_with_location = function(id, location, mimetype, ext) {
     if (location._ === null || location._ === "fileLocation") {
@@ -280,7 +283,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         files.forEach(function(file) {
           var filename;
           filename = "" + file.id;
-          if (file.filetype != null) {
+          if ((file.filetype != null) && file.filetype !== "") {
             filename = "" + filename + "." + file.filetype;
           }
           zip.addFile(_this.str2ab(atob(file.data)), {
@@ -329,7 +332,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
     var i, target, _i, _ref;
     target = new Array(array.length);
     for (i = _i = 0, _ref = array.length; 0 <= _ref ? _i < _ref : _i > _ref; i = 0 <= _ref ? ++_i : --_i) {
-      target[i] = string.fromCharCode(array[i]);
+      target[i] = String.fromCharCode(array[i]);
     }
     return target.join("");
   };

@@ -20,14 +20,17 @@ window.angular.module('myApp.controllers', [])
 		{},
 		{}
 	).then (result) =>
-		@clear_status()
-		@user = result
-		@set_status("You are logged in as #{@user.first_name} #{@user.last_name}.")
-		@open_database(result)
+		@save_auth(result)
 	.catch (error) =>
 		@set_status("You are not logged in.")
 		@user = null
 		error.handled = true
+	
+	@save_auth = (user) =>
+		@set_status("You are logged in as #{user.first_name} #{user.last_name} #{"(@#{user.username})" if user.username}")
+		@user = user
+		@open_database(user)
+		MtpApiManager.setUserAuth(2, {id: user.id})
 	
 	@step_1_done = =>
 		@loading = true
@@ -64,8 +67,7 @@ window.angular.module('myApp.controllers', [])
 			},
 			{}
 		).then (result) =>
-			@user = result.user
-			@open_database(@user)
+			@save_auth(result.user)
 		.catch (error) =>
 			if error.code==401 && error.type=='SESSION_PASSWORD_NEEDED'
 				@loading = false
@@ -92,8 +94,7 @@ window.angular.module('myApp.controllers', [])
 					},
 					{}
 				).then (result) =>
-					@user = result.user
-					@open_database(result.user)
+					@save_auth(result.user)
 				.catch(@handle_errors)
 				.finally =>
 					@password = null
@@ -136,7 +137,7 @@ window.angular.module('myApp.controllers', [])
 				@progress_name = "Messages loaded"
 				@progress_max = @message_ids_to_load.length
 				@progress_current = 0
-				@download_messages
+				@download_messages()
 	
 	@download_messages = =>
 		ids = @message_ids_to_load.splice(0, 200)
@@ -165,11 +166,11 @@ window.angular.module('myApp.controllers', [])
 				else
 					@set_status("Done")
 					@progress_name = ""
-		.catch(handle_errors)
+		.catch(@handle_errors)
 	
 	@download_missing_media = =>
 		@set_status("Fetching all messages with media from cache...")
-		@db.messages.filter((x)->x.media!=null).toArray().then (array) =>
+		@db.messages.filter((x)->x.media?).toArray().then (array) =>
 			@set_status("Found #{array.length} messages with media.")
 			@set_status("Filtering by media type...")
 			new_array = array.filter (elm) =>
@@ -179,7 +180,9 @@ window.angular.module('myApp.controllers', [])
 				)
 				return false if (
 					elm.media._=="messageMediaWebPage" ||
-					elm.media._=="messageMediaGeo"
+					elm.media._=="messageMediaGeo" ||
+					elm.media._=="messageMediaContact" ||
+					elm.media._=="messageMediaVenue"
 				)
 				@set_status("Unsupported media type: #{elm.media._}")
 				return false
@@ -220,9 +223,9 @@ window.angular.module('myApp.controllers', [])
 				biggest.location,
 				"image/jpg",
 				"jpg")
-		else if message.media.document
+		else if message.media.document?
 			if message.media.document.size >= 1024*1024
-				@main.set_status("Document of message #{message.id} is more than 1 MByte. Skipping.")
+				@set_status("Document of message #{message.id} is more than 1 MByte. Skipping.")
 				@download_next_media()
 				return
 			@download_file_without_location(
@@ -235,7 +238,7 @@ window.angular.module('myApp.controllers', [])
 	@download_file_without_location = (id, data_obj) =>
 		file = data_obj.file_name
 		ext = ""
-		if file==null
+		unless file?
 			ext = "." + data_obj.mime_type.split('/')[1]
 			ext = "" if ext==".octet-stream"
 			file = "t_#{data_obj.type||'file'}#{data_obj.id}#{ext}"
@@ -246,7 +249,7 @@ window.angular.module('myApp.controllers', [])
 			file_name: file,
 			dc_id: data_obj.dc_id,
 			size: data_obj.size}
-		@download_file_with_location(id, loc, data_obj.mimetype, ext.substr(1))	
+		@download_file_with_location(id, loc, data_obj.mime_type, ext.substr(1))	
 	
 	@download_file_with_location = (id, location, mimetype, ext) =>
 		location._ = "inputFileLocation" if (location._==null || location._=="fileLocation")
@@ -291,7 +294,7 @@ window.angular.module('myApp.controllers', [])
 				@progress_current = 0
 				files.forEach (file) =>
 					filename = "#{file.id}"
-					filename = "#{filename}.#{file.filetype}" if file.filetype?
+					filename = "#{filename}.#{file.filetype}" if file.filetype? && file.filetype!=""
 					zip.addFile(
 						@str2ab(atob(file.data)),
 						{
@@ -329,7 +332,7 @@ window.angular.module('myApp.controllers', [])
 
 	@ab2str = (array) ->
 		target = new Array(array.length)
-		target[i] = string.fromCharCode(array[i]) for i in [0...array.length]
+		target[i] = String.fromCharCode(array[i]) for i in [0...array.length]
 		return target.join("")
 	
 	return null
