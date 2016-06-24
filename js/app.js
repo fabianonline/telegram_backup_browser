@@ -9,6 +9,11 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
   this.status = "";
   this.db = null;
   this.user = null;
+  this.set_status = (function(_this) {
+    return function(status) {
+      return _this.log = ((new Date()).toString()) + " --- " + status + "\n" + _this.log;
+    };
+  })(this);
   if (localStorage.getItem("dc") == null) {
     localStorage.setItem("dc", 2);
   }
@@ -24,11 +29,6 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
       return error.handled = true;
     };
   })(this));
-  this.set_status = (function(_this) {
-    return function(status) {
-      return _this.log = ((new Date()).toString()) + " --- " + status + "\n" + _this.log;
-    };
-  })(this);
   this.clear_status = (function(_this) {
     return function() {};
   })(this);

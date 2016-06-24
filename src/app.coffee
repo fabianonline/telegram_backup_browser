@@ -9,6 +9,9 @@ window.angular.module('myApp.controllers', [])
 	@db = null
 	@user = null
 	
+	@set_status = (status) =>
+		@log = "#{(new Date()).toString()} --- #{status}\n#{@log}"
+	
 	## Run at startup
 	
 	localStorage.setItem("dc", 2) unless localStorage.getItem("dc")?
@@ -26,9 +29,6 @@ window.angular.module('myApp.controllers', [])
 		error.handled = true
 	
 	## End of run at startup
-	
-	@set_status = (status) =>
-		@log = "#{(new Date()).toString()} --- #{status}\n#{@log}"
 	
 	@clear_status = =>
 		# do nothing
