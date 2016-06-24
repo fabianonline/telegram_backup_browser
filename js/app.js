@@ -124,7 +124,9 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         },
         limit: 100,
         max_id: -1
-      }, {}).then(_this.process_dialog_list)["catch"](_this.handle_errors);
+      }, {
+        createNetworker: true
+      }).then(_this.process_dialog_list)["catch"](_this.handle_errors);
     };
   })(this);
   this.process_dialog_list = (function(_this) {

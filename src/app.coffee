@@ -130,7 +130,9 @@ window.angular.module('myApp.controllers', [])
 				limit: 100,
 				max_id: -1
 			},
-			{}
+			{
+				createNetworker: true
+			}
 		).then(@process_dialog_list)
 		.catch(@handle_errors)
 	
