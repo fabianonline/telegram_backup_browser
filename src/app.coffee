@@ -9,6 +9,7 @@ window.angular.module('myApp.controllers', [])
 	@db = null
 	@user = null
 	@storage = Storage
+	@telegram_options = {}
 	
 	@set_status = (status) =>
 		@log = "#{(new Date()).toString()} --- #{status}\n#{@log}"
@@ -18,21 +19,29 @@ window.angular.module('myApp.controllers', [])
 		MtpApiManager.invokeApi(
 			'help.getNearestDc',
 			{},
-			{}
+			@telegram_options
 		).then (result) =>
 			dc = result.nearest_dc
 			@set_status("Nearest DC: #{dc}")
-			localStorage.setItem('dc', dc)
+			if localStorage.getItem('dc')==null
+				localStorage.setItem('dc', dc)
+			else
+				@set_status("Ignoring, because DC #{localStorage.getItem('dc')} is set.")
 		.catch (error) =>
 			error.handled = true
-			@set_status("Couldn't get nearest DC, but that isn't that bad. Using 2 by default.")
-			localStorage.setItem('dc', 2)
+			@set_status("Couldn't get nearest DC, but that isn't that bad.")
+			if localStorage.getItem('dc')==null
+				@set_status("Using #{Config.App.default_dc} by default.")
+				localStorage.setItem('dc', Config.App.default_dc)
+			else
+				@set_status("Using pre-set DC #{localStorage.getItem('dc')}")
 		.finally =>
+			@telegram_options = {dcID: localStorage.getItem('dc'), createNetworker: true}
 			@set_status("Checking login state")
 			MtpApiManager.invokeApi(
 				'account.updateProfile',
 				{},
-				{}
+				@telegram_options
 			).then (result) =>
 				@save_auth(result)
 			.catch (error) =>
@@ -48,7 +57,7 @@ window.angular.module('myApp.controllers', [])
 		@set_status("You are logged in as #{user.first_name} #{user.last_name} #{"(@#{user.username})" if user.username}")
 		@user = user
 		@open_database(user)
-		MtpApiManager.setUserAuth(2, {id: user.id})
+		MtpApiManager.setUserAuth(@telegram_options.dcID, {id: user.id})
 	
 	@step_1_done = =>
 		@loading = true
@@ -61,9 +70,7 @@ window.angular.module('myApp.controllers', [])
 				api_hash: Config.App.hash,
 				lang_code: 'en'
 			},
-			{
-				createNetworker: true
-			}
+			@telegram_options
 		).then (result) =>
 			@phone_code_hash = result.phone_code_hash
 			@loading = false
@@ -83,7 +90,7 @@ window.angular.module('myApp.controllers', [])
 				phone_code_hash: @phone_code_hash,
 				phone_code: @phone_code
 			},
-			{}
+			@telegram_options
 		).then (result) =>
 			@save_auth(result.user)
 		.catch (error) =>
@@ -98,7 +105,7 @@ window.angular.module('myApp.controllers', [])
 		MtpApiManager.invokeApi(
 			'account.getPassword',
 			{},
-			{}
+			@telegram_options
 		).then (result) =>
 			makePasswordHash(
 				result.current_salt,
@@ -110,7 +117,7 @@ window.angular.module('myApp.controllers', [])
 					{
 						password_hash: hash
 					},
-					{}
+					@telegram_options
 				).then (result) =>
 					@save_auth(result.user)
 				.catch(@handle_errors)
@@ -130,9 +137,7 @@ window.angular.module('myApp.controllers', [])
 				limit: 100,
 				max_id: -1
 			},
-			{
-				createNetworker: true
-			}
+			@telegram_options
 		).then(@process_dialog_list)
 		.catch(@handle_errors)
 	
@@ -167,7 +172,7 @@ window.angular.module('myApp.controllers', [])
 			{
 				id: ids
 			},
-			{}
+			@telegram_options
 		).then (result) =>
 			@temp_result = result
 			@set_status("Saving the data...")
@@ -299,7 +304,8 @@ window.angular.module('myApp.controllers', [])
 		@download_first_media()
 		
 	@download_json = =>
-		@set_status("Creating ZIP file. This may take a few seconds...")
+		@set_status("Creating ZIP file. This may take a few seconds.")
+		@set_status("Creating and adding JSON data file...")
 		zip = new Zlib.Zip()
 		@db.messages.toArray().then (result) =>
 			zip.addFile(
@@ -312,6 +318,7 @@ window.angular.module('myApp.controllers', [])
 				@progress_name = "Media files to add"
 				@progress_max = files.length
 				@progress_current = 0
+				$scope.$apply()
 				files.forEach (file) =>
 					filename = "#{file.id}"
 					filename = "#{filename}.#{file.filetype}" if file.filetype? && file.filetype!=""
@@ -321,6 +328,7 @@ window.angular.module('myApp.controllers', [])
 							filename: @str2ab(filename)
 						})
 					@progress_current++
+					$scope.$apply()
 				data = zip.compress()
 				data = URL.createObjectURL(new File([data], "telegram_backup.zip", {type: 'application/zip'}))
 				location.href = data

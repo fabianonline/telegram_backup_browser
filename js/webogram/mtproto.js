@@ -761,9 +761,9 @@ angular.module('izhukov.mtproto', ['izhukov.utils'])
     };
 
     if (Config.Modes.debug) {
-      console.log(dT(), 'Api call', method, params, messageID, seqNo, options);
+      console.log(dT(), 'Api call', method, "dc=" + this.dcID, params, messageID, seqNo, options);
     } else {
-      console.log(dT(), 'Api call', method);
+      console.log(dT(), 'Api call', method, this.dcID);
     }
 
     return this.pushMessage(message, options);

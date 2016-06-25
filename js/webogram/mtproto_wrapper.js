@@ -274,7 +274,7 @@ angular.module('izhukov.mtproto.wrapper', ['izhukov.utils', 'izhukov.mtproto'])
       mtpGetNetworker(dcID, options).then(performRequest, rejectPromise);
     } else {
       Storage.get('dc').then(function (baseDcID) {
-        mtpGetNetworker(dcID = baseDcID || 2, options).then(performRequest, rejectPromise);
+        mtpGetNetworker(dcID = baseDcID || Config.App.default_dc, options).then(performRequest, rejectPromise);
       });
     }
 

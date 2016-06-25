@@ -10,6 +10,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
   this.db = null;
   this.user = null;
   this.storage = Storage;
+  this.telegram_options = {};
   this.set_status = (function(_this) {
     return function(status) {
       return _this.log = ((new Date()).toString()) + " --- " + status + "\n" + _this.log;
@@ -18,18 +19,31 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
   this.init = (function(_this) {
     return function() {
       _this.set_status("Finding nearest DC...");
-      return MtpApiManager.invokeApi('help.getNearestDc', {}, {}).then(function(result) {
+      return MtpApiManager.invokeApi('help.getNearestDc', {}, _this.telegram_options).then(function(result) {
         var dc;
         dc = result.nearest_dc;
         _this.set_status("Nearest DC: " + dc);
-        return localStorage.setItem('dc', dc);
+        if (localStorage.getItem('dc') === null) {
+          return localStorage.setItem('dc', dc);
+        } else {
+          return _this.set_status("Ignoring, because DC " + (localStorage.getItem('dc')) + " is set.");
+        }
       })["catch"](function(error) {
         error.handled = true;
-        _this.set_status("Couldn't get nearest DC, but that isn't that bad. Using 2 by default.");
-        return localStorage.setItem('dc', 2);
+        _this.set_status("Couldn't get nearest DC, but that isn't that bad.");
+        if (localStorage.getItem('dc') === null) {
+          _this.set_status("Using " + Config.App.default_dc + " by default.");
+          return localStorage.setItem('dc', Config.App.default_dc);
+        } else {
+          return _this.set_status("Using pre-set DC " + (localStorage.getItem('dc')));
+        }
       })["finally"](function() {
+        _this.telegram_options = {
+          dcID: localStorage.getItem('dc'),
+          createNetworker: true
+        };
         _this.set_status("Checking login state");
-        return MtpApiManager.invokeApi('account.updateProfile', {}, {}).then(function(result) {
+        return MtpApiManager.invokeApi('account.updateProfile', {}, _this.telegram_options).then(function(result) {
           return _this.save_auth(result);
         })["catch"](function(error) {
           _this.set_status("You are not logged in.");
@@ -47,7 +61,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
       _this.set_status("You are logged in as " + user.first_name + " " + user.last_name + " " + (user.username ? "(@" + user.username + ")" : void 0));
       _this.user = user;
       _this.open_database(user);
-      return MtpApiManager.setUserAuth(2, {
+      return MtpApiManager.setUserAuth(_this.telegram_options.dcID, {
         id: user.id
       });
     };
@@ -61,9 +75,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         api_id: Config.App.id,
         api_hash: Config.App.hash,
         lang_code: 'en'
-      }, {
-        createNetworker: true
-      }).then(function(result) {
+      }, _this.telegram_options).then(function(result) {
         _this.phone_code_hash = result.phone_code_hash;
         _this.loading = false;
         return _this.step = 2;
@@ -83,7 +95,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         phone_number: _this.phone,
         phone_code_hash: _this.phone_code_hash,
         phone_code: _this.phone_code
-      }, {}).then(function(result) {
+      }, _this.telegram_options).then(function(result) {
         return _this.save_auth(result.user);
       })["catch"](function(error) {
         if (error.code === 401 && error.type === 'SESSION_PASSWORD_NEEDED') {
@@ -99,11 +111,11 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
       var salt;
       _this.loading = true;
       salt = null;
-      return MtpApiManager.invokeApi('account.getPassword', {}, {}).then(function(result) {
+      return MtpApiManager.invokeApi('account.getPassword', {}, _this.telegram_options).then(function(result) {
         return makePasswordHash(result.current_salt, _this.password, CryptoWorker).then(function(hash) {
           return MtpApiManager.invokeApi('auth.checkPassword', {
             password_hash: hash
-          }, {}).then(function(result) {
+          }, _this.telegram_options).then(function(result) {
             return _this.save_auth(result.user);
           })["catch"](_this.handle_errors)["finally"](function() {
             return _this.password = null;
@@ -124,9 +136,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         },
         limit: 100,
         max_id: -1
-      }, {
-        createNetworker: true
-      }).then(_this.process_dialog_list)["catch"](_this.handle_errors);
+      }, _this.telegram_options).then(_this.process_dialog_list)["catch"](_this.handle_errors);
     };
   })(this);
   this.process_dialog_list = (function(_this) {
@@ -165,7 +175,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
       _this.set_status("Downloading " + ids.length + " messages, starting with ID=" + ids[0] + "...");
       return MtpApiManager.invokeApi('messages.getMessages', {
         id: ids
-      }, {}).then(function(result) {
+      }, _this.telegram_options).then(function(result) {
         _this.temp_result = result;
         _this.set_status("Saving the data...");
         return _this.db.transaction('rw', _this.db.messages, _this.db.people, _this.db.chats, function() {
@@ -315,7 +325,8 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
   this.download_json = (function(_this) {
     return function() {
       var zip;
-      _this.set_status("Creating ZIP file. This may take a few seconds...");
+      _this.set_status("Creating ZIP file. This may take a few seconds.");
+      _this.set_status("Creating and adding JSON data file...");
       zip = new Zlib.Zip();
       return _this.db.messages.toArray().then(function(result) {
         zip.addFile(_this.str2ab(JSON.stringify(result)), {
@@ -327,6 +338,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
           _this.progress_name = "Media files to add";
           _this.progress_max = files.length;
           _this.progress_current = 0;
+          $scope.$apply();
           files.forEach(function(file) {
             var filename;
             filename = "" + file.id;
@@ -336,7 +348,8 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
             zip.addFile(_this.str2ab(atob(file.data)), {
               filename: _this.str2ab(filename)
             });
-            return _this.progress_current++;
+            _this.progress_current++;
+            return $scope.$apply();
           });
           data = zip.compress();
           data = URL.createObjectURL(new File([data], "telegram_backup.zip", {

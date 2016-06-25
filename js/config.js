@@ -6,7 +6,8 @@ Config = {
 		webogram_hash: '8da85b0d5bfe62527e5b244c209159c3',
 		server_production: "149.154.167.50:443",
 		server_development: "149.154.167.40:443",
-		version: "0.0.1"
+		version: "0.0.1",
+		default_dc: 4
 	},
 	Modes: {
 		test: false,
