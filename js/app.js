@@ -23,7 +23,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         var dc;
         dc = result.nearest_dc;
         _this.set_status("Nearest DC: " + dc);
-        if (localStorage.getItem('dc') === null) {
+        if (localStorage.getItem('dc') == null) {
           return localStorage.setItem('dc', dc);
         } else {
           return _this.set_status("Ignoring, because DC " + (localStorage.getItem('dc')) + " is set.");
@@ -39,7 +39,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
         }
       })["finally"](function() {
         _this.telegram_options = {
-          dcID: localStorage.getItem('dc'),
+          dcID: parseInt(localStorage.getItem('dc')),
           createNetworker: true
         };
         _this.set_status("Checking login state");
@@ -384,7 +384,7 @@ window.angular.module('myApp.controllers', []).controller('MainController', func
   this.test = (function(_this) {
     return function() {
       return $.getScript('test.js', function() {
-        return doTest(_this);
+        return doTest(_this, MtpApiManager);
       });
     };
   })(this);

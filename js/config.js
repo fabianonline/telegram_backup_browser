@@ -7,7 +7,7 @@ Config = {
 		server_production: "149.154.167.50:443",
 		server_development: "149.154.167.40:443",
 		version: "0.0.1",
-		default_dc: 4
+		default_dc: 2
 	},
 	Modes: {
 		test: false,

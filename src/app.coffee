@@ -23,7 +23,7 @@ window.angular.module('myApp.controllers', [])
 		).then (result) =>
 			dc = result.nearest_dc
 			@set_status("Nearest DC: #{dc}")
-			if localStorage.getItem('dc')==null
+			if !localStorage.getItem('dc')?
 				localStorage.setItem('dc', dc)
 			else
 				@set_status("Ignoring, because DC #{localStorage.getItem('dc')} is set.")
@@ -36,7 +36,7 @@ window.angular.module('myApp.controllers', [])
 			else
 				@set_status("Using pre-set DC #{localStorage.getItem('dc')}")
 		.finally =>
-			@telegram_options = {dcID: localStorage.getItem('dc'), createNetworker: true}
+			@telegram_options = {dcID: parseInt(localStorage.getItem('dc')), createNetworker: true}
 			@set_status("Checking login state")
 			MtpApiManager.invokeApi(
 				'account.updateProfile',
@@ -352,7 +352,7 @@ window.angular.module('myApp.controllers', [])
 		@db.open().catch(@handle_errors)		
 	
 	@test = =>
-		$.getScript('test.js', => doTest(@) )
+		$.getScript('test.js', => doTest(@, MtpApiManager) )
 
 	@str2ab = (str) ->
 		array = new (if window.Uint8Array? then Uint8Array else Array)(str.length)
